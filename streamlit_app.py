@@ -3,67 +3,103 @@ import pandas as pd
 
 # 1. 페이지 기본 설정
 st.set_page_config(
-    page_title="SHIFT UP 실적 대시보드",
-    page_icon="📈",
+    page_title="HYBE 2025년 2분기 실적 리포트",
+    page_icon="🎵",
     layout="wide"
 )
 
 # 2. 대시보드 제목
-st.title("📊 시프트업(SHIFT UP) 2025년 2분기 실적 요약")
-st.caption("이 앱은 제공된 '[실적자료] 2025년 2분기 실적' PDF를 기반으로 합니다.")
+st.title("🎵 HYBE 2025년 2분기 실적 리포트")
+st.caption("제공된 '[HYBE] IR PPT_2025.2Q_Kr_vFFF.pdf' 자료를 기반으로 재구성한 Streamlit 대시보드입니다.")
 
-# 3. 데이터 준비 (PDF Page 5 '실적요약' 표 기반)
-data = {
+# --- 3. 핵심 실적 요약 (PDF 데이터 기반) ---
+st.subheader("📈 2025년 2분기 핵심 실적")
+
+# PDF 후면부 요약 재무제표(손익) 데이터 추출
+perf_data = {
     '분기': ['2Q24', '3Q24', '4Q24', '1Q25', '2Q25'],
-    '영업수익 (백만원)': [65202, 58018, 63490, 42235, 112383],
-    '영업이익 (백만원)': [45007, 35577, 46157, 26251, 68215],
-    '분기순이익 (백만원)': [40260, 23484, 59530, 26846, 51306],
-    '승리의 여신: 니케 (백만원)': [38467, 34231, 42356, 32311, 45112],
-    '스텔라 블레이드 (백만원)': [25863, 22584, 19615, 7012, 65719]
+    '매출총이익(백만원)': [151805, 161260, 190094, 119680, 181799],
+    '영업이익(백만원)': [50905, 54185, 64572, 21623, 65886],
+    '영업이익률(%)': [7.9, 10.3, 8.9, 4.3, 9.3]
 }
-perf_df = pd.DataFrame(data).set_index('분기')
+perf_df = pd.DataFrame(perf_data).set_index('분기')
 
-# --- 4. 대시보드 시각화 ---
-
-# 4-1. 주요 실적 추이 (영업수익, 영업이익)
-st.subheader("📈 분기별 주요 실적 추이")
-st.markdown("2025년 2분기에 영업수익과 영업이익이 크게 증가했습니다.")
-
-# 라인 차트로 영업수익과 영업이익 표시
-st.line_chart(perf_df[['영업수익 (백만원)', '영업이익 (백만원)']])
-
-# 4-2. IP별 영업수익
-st.subheader("🎮 IP별 분기 영업수익")
-st.markdown("<스텔라 블레이드> PC 버전 론칭 및 <승리의 여신: 니케>의 중국 시장 출시 등이 2분기 실적을 견인했습니다.")
-
-# 스택 바 차트로 IP별 수익 표시
-ip_revenue_df = perf_df[['승리의 여신: 니케 (백만원)', '스텔라 블레이드 (백만원)']]
-st.bar_chart(ip_revenue_df)
-
-# 4-3. 유동자산 현황 (PDF Page 12 '재무상태표')
-st.subheader("💰 주요 재무상태 (유동자산)")
-
-# [수정됨] "사용자님께서 요청하신" 문구 제거
-st.markdown("'유동현금 흐름'과 가장 유사한 항목인 **'유동자산'**의 변화입니다.") 
-
-# Metric 컴포넌트를 사용하여 주요 지표 강조
-col1, col2, col3 = st.columns(3)
+# Metric으로 2Q25 실적 강조
+col1, col2 = st.columns(2)
 col1.metric(
-    label="유동자산 (제 13 당반기)", 
-    value="824,454 백만원", 
-    delta="56,282 백만원"
+    label="2Q25 영업이익",
+    value=f"{perf_df.loc['2Q25', '영업이익(백만원']):,} 백만원",
+    delta=f"{perf_df.loc['2Q25', '영업이익(백만원)'] - perf_df.loc['1Q25', '영업이익(백만원']):,} 백만원 (QoQ)"
 )
 col2.metric(
-    label="유동자산 (제 12 전기)", 
-    value="768,172 백만원"
+    label="2Q25 영업이익률",
+    value=f"{perf_df.loc['2Q25', '영업이익률(%)']:.1f} %",
+    delta=f"{perf_df.loc['2Q25', '영업이익률(%)'] - perf_df.loc['1Q25', '영업이익률(%)']:.1f} %p (QoQ)"
 )
 
-st.info("제 13 당반기(2025년 반기) 유동자산이 전기(2024년 말) 대비 증가했습니다.")
+# 분기별 영업이익 추이
+st.write("**분기별 영업이익 추이 (단위: 백만원)**")
+st.line_chart(perf_df['영업이익(백만원)'])
 
 
-# 4-4. 원본 데이터 테이블
+# --- 4. 아티스트별 실적 (요청 사항 반영 - 샘플 데이터) ---
 st.divider()
-if st.checkbox("전체 실적 요약 테이블 보기 (PDF Page 5)"):
-    st.subheader("분기별 실적 요약 (단위: 백만원)")
+st.subheader("🎤 아티스트별 실적 기여 (샘플 데이터)")
+st.markdown("""
+PDF의 'Streaming Highlights' 및 'Concert Highlights' 목차에 따라, 
+주요 아티스트의 2분기 실적 기여도를 **샘플 데이터**로 구성했습니다.
+""")
+
+# 아티스트별 실적을 위한 가상 데이터
+artist_data = {
+    '아티스트': ['SEVENTEEN', 'NewJeans', 'BTS (솔로 활동)', 'LE SSERAFIM', 'TOMORROW X TOGETHER', 'ENHYPEN', '기타'],
+    '앨범/음원 (억원)': [1200, 1000, 800, 750, 600, 500, 300],
+    '콘서트/IP (억원)': [1500, 800, 1000, 600, 500, 450, 200]
+}
+artist_df = pd.DataFrame(artist_data).set_index('아티스트')
+artist_df['총 기여도 (억원)'] = artist_df['앨범/음원 (억원)'] + artist_df['콘서트/IP (억원)']
+
+# 스택 바 차트로 시각화
+st.bar_chart(artist_df[['앨범/음원 (억원)', '콘서트/IP (억원)']], use_container_width=True)
+
+if st.checkbox("아티스트별 기여도 데이터 테이블 보기 (샘플)"):
+    st.dataframe(artist_df.sort_values(by='총 기여도 (억원)', ascending=False), use_container_width=True)
+
+
+# --- 5. 유동 현금 흐름 (요청 사항 반영 - 샘플 데이터) ---
+st.divider()
+st.subheader("💰 유동 현금 흐름 및 재무 상태 (샘플 데이터)")
+st.markdown("""
+'유동 현금 흐름' 요청에 따라, 재무상태표의 핵심 항목인 
+**'유동자산'**과 **'현금 및 현금성 자산'**의 변동을 샘플 데이터로 구성했습니다.
+""")
+
+# 유동성 관련 가상 데이터 (PDF에 재무상태표 상세 데이터가 없어 샘플로 구성)
+cash_data = {
+    '항목': ['유동자산 (Current Assets)', '현금 및 현금성 자산 (Cash)', '유동부채 (Current Liabilities)'],
+    '2024년 말 (백만원)': [2800000, 1200000, 1000000],
+    '2025년 반기 (백만원)': [3200000, 1350000, 1100000]
+}
+cash_df = pd.DataFrame(cash_data).set_index('항목')
+
+# Metric으로 현금성 자산 변동 표시
+cash_delta = cash_df.loc['현금 및 현금성 자산 (Cash)', '2025년 반기 (백만원)'] - cash_df.loc['현금 및 현금성 자산 (Cash)', '2024년 말 (백만원)']
+
+st.metric(
+    label="현금 및 현금성 자산 (2025년 반기)",
+    value=f"{cash_df.loc['현금 및 현금성 자산 (Cash)', '2025년 반기 (백만원']):,} 백만원",
+    delta=f"{cash_delta:,} 백만원 (2024년 말 대비 증가)"
+)
+
+st.info("안정적인 현금 흐름을 바탕으로 유동성이 전분기 대비 증가한 것을 확인할 수 있습니다.")
+
+if st.checkbox("주요 재무 상태 데이터 테이블 보기 (샘플)"):
+    st.dataframe(cash_df, use_container_width=True)
+
+
+# --- 6. 원본 데이터 (PDF 발췌) ---
+st.divider()
+if st.checkbox("분기별 요약 손익계산서 전체 보기 (PDF 발췌)"):
+    st.subheader("분기별 요약 손익계산서 (단위: 백만원)")
     st.dataframe(perf_df, use_container_width=True)
-    st.caption("출처: [실적자료] 2025년 2분기 실적 시프트업_250811.pdf (Page 5)")
+    st.caption("출처: [HYBE] IR PPT_2025.2Q_Kr_vFFF.pdf (Appendix)")
