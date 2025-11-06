@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import yfinance as yf # 주가 데이터를 위한 라이브러리
 import datetime
 
 # 1. 페이지 기본 설정
