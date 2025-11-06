@@ -43,7 +43,7 @@ st.bar_chart(ip_revenue_df)
 
 # 4-3. 유동자산 현황 (PDF Page 12 '재무상태표')
 st.subheader("💰 주요 재무상태 (유동자산)")
-st.markdown("사용자님께서 요청하신 '유동현금 흐름'과 가장 유사한 항목인 **'유동자산'**의 변화입니다.")
+st.markdown("유동 자산 변화")
 
 # Metric 컴포넌트를 사용하여 주요 지표 강조
 col1, col2, col3 = st.columns(3)
