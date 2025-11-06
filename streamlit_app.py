@@ -1,13 +1,3 @@
-죄송합니다. 제가 드린 설명 문장까지 app.py 파일의 맨 첫 줄에 복사되어 SyntaxError가 발생했습니다.
-
-.py 파일에는 오직 Python 코드만 포함되어야 합니다.
-
-아래는 설명 문장이 모두 제거된, GitHub에서 실행 가능한 최종 app.py 코드입니다.
-
-이전 파일 내용을 모두 삭제하시고, 아래 코드를 그대로 복사하여 app.py 파일에 붙여넣으세요.
-
-1. app.py (최종 수정 코드)
-Python
 
 import streamlit as st
 import pandas as pd
