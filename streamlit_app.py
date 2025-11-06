@@ -1,9 +1,3 @@
-네, 알겠습니다. '주요 재무 상태 요약' 테이블을 라인 그래프로 변경하여 시계열 추이를 더 명확하게 볼 수 있도록 수정한 전체 코드를 다시 제공합니다.
-
-st.dataframe(balance_sheet_df, ...) 부분을 st.line_chart(balance_sheet_df)로 변경했습니다.
-
-1. app.py (그래프 수정된 전체 코드)
-Python
 
 import streamlit as st
 import pandas as pd
