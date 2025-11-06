@@ -1,101 +1,96 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import datetime
 
 # 1. 페이지 기본 설정
 st.set_page_config(
-    page_title="KOSPI 실시간 대시보드",
-    page_icon="📈",
+    page_title="KOSPI 외국인 유동 자금 대시보드",
+    page_icon="KRW", # 🇰🇷
     layout="wide"
 )
 
-# 2. 대시보드 제목
-st.title("📈 KOSPI 실시간 대시보드")
-st.markdown(f"**기준일: {datetime.date.today().strftime('%Y-%m-%d')}**")
-st.caption("이 앱은 Yahoo Finance API를 통해 실시간 KOSPI 데이터를 받아옵니다.")
-
-# 3. 데이터 로드 (yfinance)
-# @st.cache_data : 데이터를 캐싱하여 앱 속도 향상
+# --- 2. 가상 데이터 생성 (yfinance 불필요) ---
+# (실제 데이터 파일이 없으므로, 최근 30일간의 가상 데이터를 생성합니다)
 @st.cache_data
-def load_data():
-    # KOSPI의 Ticker(종목코드)는 '^KS11'입니다.
-    ticker = yf.Ticker("^KS11")
+def create_sample_data():
+    today = datetime.date.today()
+    # freq='B'는 Business day(영업일) 기준
+    dates = pd.date_range(end=today, periods=30, freq='B')
     
-    # 'period="1y"' : 최근 1년 간의 데이터를 '일(day)' 단위로 가져옵니다.
-    # (옵션: "1mo", "3mo", "6mo", "1y", "2y", "5y", "max")
-    data = ticker.history(period="1y", interval="1d")
+    # 가상 KOSPI 지수 (2500pt 근방에서 무작위 변동)
+    kospi_index = (np.random.randn(30).cumsum() * 15) + 2500
     
-    # 날짜 인덱스를 'Date' 컬럼으로 리셋
-    data = data.reset_index()
-    # 날짜(Date) 컬럼을 날짜 형식으로 변환 (시간 정보 제거)
-    data['Date'] = data['Date'].dt.date
+    # 가상 외국인 순매수 (억 원 단위, 0을 기준으로 +/- 5000억)
+    foreign_net = (np.random.randn(30) * 2000)
     
-    return data
+    df = pd.DataFrame({
+        'KOSPI 지수': kospi_index,
+        '외국인 순매수(억 원)': foreign_net
+    }, index=dates)
+    
+    df.index.name = '날짜'
+    return df
 
-# 데이터 로딩 스피너
-with st.spinner('KOSPI 데이터를 로딩 중입니다...'):
-    df = load_data()
+# 데이터 로드
+df = create_sample_data()
+# ----------------------------------------
 
-# 데이터 로드 실패 시 처리
-if df.empty:
-    st.error("데이터를 불러오는 데 실패했습니다. 네트워크 연결을 확인하거나 잠시 후 다시 시도하세요.")
-    st.stop()
+# 3. 대시보드 제목
+st.title("📈 KOSPI 외국인 유동 자금 대시보드 (샘플)")
+st.markdown(f"**기준일: {datetime.date.today().strftime('%Y-%m-%d')}**")
+st.info("이 앱은 `yfinance` 없이 **가상의 샘플 데이터**로 실행되고 있습니다.")
 
 # 4. 주요 지표 (Metrics)
 st.divider()
+today_data = df.iloc[-1] # 오늘(최신) 데이터
+yesterday_data = df.iloc[-2] # 어제 데이터
 
-# 최신 데이터(오늘 또는 가장 최근 거래일)
-latest_data = df.iloc[-1]
-# 어제 데이터 (두 번째 최신 거래일)
-yesterday_data = df.iloc[-2]
-
-# 지수 계산
-latest_close = latest_data['Close']
-change = latest_close - yesterday_data['Close']
-percent_change = (change / yesterday_data['Close']) * 100
-
-# Metric 델타(변동) 색상 설정
-delta_color = "inverse" # 기본값 (오르면 빨간색, 내리면 파란색)
-# (참고: Streamlit의 기본 색상은 미국식(오르면 초록)입니다)
-# delta_color = "normal" 
+# KOSPI 지수 변동
+kospi_delta = today_data['KOSPI 지수'] - yesterday_data['KOSPI 지수']
+# 외국인 순매수 변동
+foreign_delta = today_data['외국인 순매수(억 원)'] - yesterday_data['외국인 순매수(억 원)']
 
 col1, col2, col3 = st.columns(3)
 col1.metric(
     "KOSPI 지수", 
-    f"{latest_close:,.2f} P",
-    f"{change:,.2f} P ({percent_change:.2f}%)",
-    delta_color=delta_color
+    f"{today_data['KOSPI 지수']:.2f} P",
+    f"{kospi_delta:.2f} P (전일 대비)"
 )
 col2.metric(
-    "거래량 (Volume)",
-    f"{latest_data['Volume']:,} 주",
-    delta=int(latest_data['Volume'] - yesterday_data['Volume']),
-    delta_color=delta_color
+    "당일 외국인 순매수",
+    f"{today_data['외국인 순매수(억 원)']:,.0f} 억 원",
+    f"{foreign_delta:,.0f} 억 원 (전일 대비)"
 )
 col3.metric(
-    "당일 고가 (High)",
-    f"{latest_data['High']:,.2f} P"
+    "최근 30일 누적 순매수",
+    f"{df['외국인 순매수(억 원)'].sum():,.0f} 억 원"
 )
 
 # 5. 시각화
 st.divider()
+st.subheader("📊 최근 30영업일 외국인 순매수 (유동 자금)")
+st.markdown("양수(+)는 순매수(자금 유입), 음수(-)는 순매도(자금 유출)를 의미합니다.")
+st.bar_chart(df['외국인 순매수(억 원)'], color="#FF0000") # 붉은색 계열
 
-# 5-1. KOSPI 지수 종가 차트 (Line Chart)
-st.subheader("📊 KOSPI 지수 (최근 1년)")
-st.markdown("KOSPI 지수의 종가(Close) 기준 변동 추이입니다.")
+st.subheader("📈 KOSPI 지수 및 외국인 누적 순매수 추이")
+st.markdown("외국인 자금 유입이 KOSPI 지수에 어떤 영향을 주는지 비교해볼 수 있습니다.")
 
-# 차트용 데이터프레임 (날짜를 인덱스로 설정해야 함)
-chart_df = df.set_index('Date')
-st.line_chart(chart_df['Close'], color="#FF0000") # 붉은색
+# 누적 순매수 계산
+df['외국인 누적 순매수(억 원)'] = df['외국인 순매수(억 원)'].cumsum()
 
-# 5-2. 거래량 차트 (Bar Chart)
-st.subheader("📊 거래량 (최근 1년)")
-st.markdown("지수 변동과 함께 거래량(Volume)을 확인하는 것은 시장의 관심도를 파악하는 데 중요합니다.")
-st.bar_chart(chart_df['Volume'], color="#0000FF") # 푸른색
+# KOSPI와 누적 순매수 비교
+col_left, col_right = st.columns(2)
+with col_left:
+    st.write("**KOSPI 지수 추이**")
+    st.line_chart(df['KOSPI 지수'])
+
+with col_right:
+    st.write("**외국인 누적 순매수 추이**")
+    st.line_chart(df['외국인 누적 순매수(억 원)'])
 
 
 # 6. 원본 데이터 보기
 st.divider()
-if st.checkbox("KOSPI 원본 데이터 테이블 보기"):
+if st.checkbox("샘플 데이터 원본 테이블 보기"):
     st.dataframe(df, use_container_width=True)
-    st.caption("출처: Yahoo Finance API (^KS11)")
